@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8"/>
+    <title>Сервис новостей</title>
+</head>
+<body>
+    <h2>Привет, {{ user_name }}!</h2>
+    <p>Вот последние обновлённые посты:</p>
+    <ul>
+        {% for post in posts %}
+            <li>
+                <a href="{{ site_url }}/{{ post.id }}/">
+                    {{ post.title }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+    <p>Спасибо, что остаетесь с нами!</p>
+</body>
+</html>
