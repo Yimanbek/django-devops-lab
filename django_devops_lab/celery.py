@@ -10,3 +10,12 @@ celery_worker = Celery('django_devops_lab')
 celery_worker.config_from_object('django.conf:settings', namespace='CELERY')
 
 celery_worker.autodiscover_tasks()
+
+
+#Send post message to email user
+celery_worker.conf.beat_schedule = {
+    'Send-News-Every-Day': {
+        'task': 'post.tasks.send_message',
+        'schedule': crontab(hour = 23, minute=59)
+    }
+}
