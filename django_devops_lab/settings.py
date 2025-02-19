@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'dj_rest_auth',
     'django_celery_results',
-
+    'drf_api_logger',
+    
     'post',
     'user',
 ]
@@ -174,4 +175,24 @@ CELERY_CACHE_BACKEND = 'django-cache'
 CELERY_CACHE_BACKEND_OPTIONS = {
     'max_entries': 1000,
     'cull_frequency': 3,
+}
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': 'celery.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
 }

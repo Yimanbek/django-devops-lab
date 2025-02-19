@@ -6,7 +6,7 @@ from datetime import datetime
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from user.models import User
-
+from parser.scrap_news_from_limonKg import ScrapNewsLimonKG
 
 @shared_task(
     autoretry_for=(Exception,),
@@ -46,8 +46,19 @@ def send_message():
                 html_message=html_message,
                 fail_silently=False
             )
-        except Exception as exc:
-            raise Exception
+        except Exception as e:
+            logging.error(f"Ошибка при отправке письма {user.email}: {e}")
+
 
         logging.info(f"Отправили письмо пользователю {user.email}")
 
+@shared_task(
+    autoretry_for=(Exception,),
+    retry_kwargs={
+        'max_retries': 5,
+        'countdown': 30,
+    }
+)
+def start_scraper():
+    start = ScrapNewsLimonKG()
+    starting = start.start()

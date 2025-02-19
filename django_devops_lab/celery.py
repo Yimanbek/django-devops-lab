@@ -16,6 +16,10 @@ celery_worker.autodiscover_tasks()
 celery_worker.conf.beat_schedule = {
     'Send-News-Every-Day': {
         'task': 'post.tasks.send_message',
-        'schedule': crontab(hour = 23, minute=59)
+        'schedule': crontab(hour = 12, minute=0)
+    },
+    'Start-scrap-news-LimonKd': {
+        'task': 'post.tasks.start_scraper',
+        'schedule': crontab(hour = 9, minute=0)
     }
 }
