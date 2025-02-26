@@ -10,22 +10,54 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+              
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-django
+
+      - name: Wait for PostgreSQL to start
+        run: |
+          echo "Waiting for PostgreSQL..."
+          until pg_isready -h localhost -p 5432 -U test_user; do
+            sleep 1
+          done
+          echo "PostgreSQL is ready!"
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+        run: |
+          python manage.py makemigrations
+          python manage.py migrate
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Build and Start Services
         run: |
-          docker-compose -f docker-compose.local.yaml up -d
+          docker compose -f docker-compose.local.yaml up --build -d
           docker ps -a
 
-      - name: Run Tests
-        run: |
-          docker exec django-Test pytest
-
-      - name: Stop and Clean Up
-        run: docker-compose -f docker-compose.local.yaml down -v
+      - name: Run tests
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+        run: pytest
