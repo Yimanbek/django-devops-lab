@@ -10,6 +10,7 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    
     services:
       postgres:
         image: postgres:14
@@ -45,28 +46,13 @@ jobs:
       - name: Run migrations
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
           python manage.py makemigrations
           python manage.py migrate
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build and Start Services
-        run: |
-          docker compose -f docker-compose.local.yaml up --build -d
-          docker ps -a
-
       - name: Run tests
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: pytest
-          docker-compose -f docker-compose.local.yaml up --build -d
-          docker ps -a
-
-      - name: Run Tests
-        run: |
-          docker exec django-Test pytest
-
-      - name: Stop and Clean Up
-        run: docker-compose -f docker-compose.local.yaml down -v
