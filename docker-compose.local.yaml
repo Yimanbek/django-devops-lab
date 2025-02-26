@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:14
-    container_name: yimanbek_db
+    container_name: db
     restart: always
     environment:
       POSTGRES_USER: ${USER}
@@ -16,10 +16,11 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/
-    
+
   web:
     build: 
       context: .
+      dockerfile: ./docker/dockerfile.local
     depends_on:
       db:
         condition: service_healthy
@@ -27,28 +28,25 @@ services:
     restart: always
     ports:
       - "8000:8000"
-
-  migrations:
-    build:
-      context: .
+    volumes:
+      - static_volume:/app/static
     command: >
       sh -c "python manage.py makemigrations &&
-             python manage.py migrate"
-    depends_on:
-      db:
-        condition: service_healthy
-    container_name: django_devops_lab-MIGRATIONS
-    restart: on-failure
+             python manage.py migrate
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
 
   celery_worker:
-    build: .
+    build: 
+      context: .
+      dockerfile: ./docker/dockerfile.local
     container_name: celery_worker
     command: celery -A django_devops_lab worker -l INFO
     volumes: 
       - .:/usr/src/app/
     environment:
-      - CELERY_BROKER=${CELERY_BROKER_URL}
-      - CELERY_BACKEND=${CELERY_BROKER_URL}
+      - CELERY_BROKER=amqp://admin:admin@rabbitmq:5672//
+      - CELERY_BACKEND=amqp://admin:admin@rabbitmq:5672//
     depends_on:
       - web
       - rabbitmq
@@ -64,7 +62,9 @@ services:
       - "15672:15672"
 
   celery_beat:
-    build: .
+    build: 
+      context: .
+      dockerfile: ./docker/dockerfile.local
     container_name: celery-beat
     command: celery -A django_devops_lab beat -l INFO
     volumes:
@@ -74,7 +74,9 @@ services:
       - rabbitmq
 
   celery_flower:
-    build: .
+    build: 
+      context: .
+      dockerfile: ./docker/dockerfile.local
     command: celery -A django_devops_lab flower --port=5555
     ports:
       - "5555:5555"
@@ -83,6 +85,22 @@ services:
       - rabbitmq
     volumes:
       - .:/usr/src/app/
-      
+
+  test:
+    build: 
+      context: .
+      dockerfile: ./docker/dockerfile.local
+    command: >
+      sh -c "pytest"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    container_name: django-Test
+    restart: 'no'
+
 volumes:
-  pgdata:
+  pgdata: 
+  static_volume:
+
