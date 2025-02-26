@@ -61,3 +61,12 @@ jobs:
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
         run: pytest
+          docker-compose -f docker-compose.local.yaml up --build -d
+          docker ps -a
+
+      - name: Run Tests
+        run: |
+          docker exec django-Test pytest
+
+      - name: Stop and Clean Up
+        run: docker-compose -f docker-compose.local.yaml down -v
