@@ -1,2 +1,4 @@
 .env
 venv/
+celery.log
+.pytest_cache/
