@@ -1,39 +1,13 @@
-name: CI/CD
+name: CD deployment
 
 on:
   push:
     branches:
       - main
-
-jobs:
-
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Build and Start Services
-        run: |
-          docker-compose -f docker-compose.local.yaml up -d
-          docker ps -a
-
-      - name: Run Tests
-        run: |
-          docker exec django-Test pytest
-
-      - name: Stop and Clean Up
-        run: docker-compose -f docker-compose.local.yaml down -v
-
+  
   deploy:
     name: Deploy to Server
     runs-on: ubuntu-latest
-    needs: test
 
     steps:
       - name: Checkout repository
